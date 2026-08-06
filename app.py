@@ -64,7 +64,7 @@ st.caption(
     """
     **ISG Explorer v1.0**
 
-    Developed by **Grace West**, Rihn Lab, University of Cambridge.
+    Developed by **[Grace West](https://www.linkedin.com/in/grace-west-6284b4232/)**, Rihn Lab, University of Cambridge.
     
     **Data sources**
     
@@ -82,8 +82,7 @@ st.caption(
 
 model = load_model()
 isg = load_isg()
-expr = load_expression()
-gene_column_map = build_gene_column_map(expr)
+gene_column_map = build_gene_column_map()
 
 species_options = get_species(isg)
 cell_line_options = get_cell_lines(model)
@@ -146,16 +145,22 @@ if run:
     
     with st.spinner("Analysing expression data and generating IFN landscape"):
 
+        expr = load_expression(
+            genes,
+            model,
+            gene_column_map,
+        )
+        
         analysis = run_analysis(
             genes,
             cell_lines,
             species,
             expr,
-            model,
             gene_column_map,
             isg,
         )
-                
+        del expr
+        
         st.session_state["analysis"] = analysis
         st.session_state["species"] = species
         st.session_state["cell_lines"] = cell_lines
@@ -170,6 +175,8 @@ species = st.session_state["species"]
 cell_lines = st.session_state["cell_lines"]
 genes = st.session_state["genes"]
 bubble_size = st.session_state["bubble_size"]
+pdf_figure = None
+recommended = None
 
 if analysis["missing"]:
 
@@ -197,26 +204,26 @@ if "IFN Landscape Plot" in output_options:
     download_plot_png(pdf_figure)
     download_plot_html(fig)
     
-if "Top 10 Cell Lines" in output_options:
+if "Top 50 Cell Lines" in output_options:
 
     recommended = show_top_cell_lines(
         analysis
     )   
     
-    # =====================
-    # PDF REPORT
-    # =====================
+# =====================
+# PDF REPORT
+# =====================
 
 
-    pdf = generate_pdf_report(
-        species=species,
-        cell_lines=cell_lines,
-        genes=analysis["genes"],
-        missing=analysis["missing"],
-        ifnlandscape=analysis["ifnlandscape"],
-        expression_matrix=analysis["expression_matrix"],
-        recommended=recommended,
-        figure=pdf_figure,
-    )
+pdf = generate_pdf_report(
+    species=species,
+    cell_lines=cell_lines,
+    genes=analysis["genes"],
+    missing=analysis["missing"],
+    ifnlandscape=analysis["ifnlandscape"],
+    expression_matrix=analysis["expression_matrix"],
+    recommended=recommended,
+    figure=pdf_figure,
+)
 
-    download_pdf(pdf)
+download_pdf(pdf)

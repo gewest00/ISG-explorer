@@ -16,6 +16,13 @@ def show_expression_matrix(
     """
 
     st.subheader("Expression Matrix")
+    
+    st.caption(
+        "TPM = transcripts per million"
+    )
+    st.caption(
+        "Guide for selecting cell lines for knockouts: >5 = excellent! 3-5 = acceptable. >3 = avoid if possible."
+    )
 
     styled_matrix = (
         analysis["expression_matrix"]
@@ -90,6 +97,14 @@ def show_ifn_plot(
     """
 
     st.subheader("IFN Landscape")
+    
+    st.caption(
+        "Y = Interferon induction. Higher scores indicate stronger association with the interferon-stimulated gene signature."
+    )
+    
+    st.caption(
+        "X = Basal expression in selected cell lines."
+    )
 
     fig = make_ifnlandscape_plot(
         analysis["ifnlandscape"],
@@ -114,7 +129,7 @@ def show_top_cell_lines(analysis):
     st.subheader("Recommended Cell Lines")
 
     st.caption(
-        "Top ten DepMap cell lines ranked by basal expression."
+        "Top fifty DepMap cell lines ranked by basal expression."
     )
 
     top_df = analysis["top_expression"]

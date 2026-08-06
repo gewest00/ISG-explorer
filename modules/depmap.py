@@ -3,33 +3,77 @@ import streamlit as st
 
 
 @st.cache_data
-def load_expression(path="data/OmicsExpressionTPMLogp1HumanProteinCodingGenes.csv"):
-    """Load DepMap expression matrix."""
-    return pd.read_csv(path)
+def load_expression(
+    genes,
+    model,
+    gene_column_map,
+    path="data/OmicsExpressionTPMLogp1HumanProteinCodingGenes.csv",
+):
+    """
+    Load only the requested gene columns from DepMap.
+    """
+
+    usecols = [
+        "ModelID",
+    ]
+
+    for gene in genes:
+        if gene in gene_column_map:
+            usecols.append(gene_column_map[gene])
+
+    df = pd.read_csv(
+        path,
+        usecols=usecols,
+    )
+
+    expression_cols = [
+        c for c in df.columns
+        if c != "ModelID"
+    ]
+
+    df[expression_cols] = (
+        df[expression_cols]
+        .astype("float32")
+    )
+
+    df = df.merge(
+        model[
+            [
+                "ModelID",
+                "StrippedCellLineName",
+                "OncotreeLineage",
+            ]
+        ],
+        on="ModelID",
+        how="left",
+    )
+
+    return df
 
 @st.cache_data
-def build_gene_column_map(expr):
+def build_gene_column_map(
+    path="data/OmicsExpressionTPMLogp1HumanProteinCodingGenes.csv",
+):
     """
-    Create a dictionary mapping
-    GENE -> DepMap column name.
-
-    This only runs once thanks to caching.
+    Read only the header of the DepMap file and
+    build a gene → column lookup.
     """
 
-    col_map = {}
+    columns = pd.read_csv(
+        path,
+        nrows=0,
+    ).columns
 
-    for col in expr.columns:
-        if "(" in col:
-            gene = col.split(" (")[0].strip().upper()
-            col_map[gene] = col
-
-    return col_map
+    return {
+        col.split(" (")[0].strip().upper(): col
+        for col in columns
+        if "(" in col
+    }
     
 def get_expression_matrix(
     genes,
     cell_lines,
     expr,
-    model,
     col_map
 ):
     """
@@ -37,15 +81,7 @@ def get_expression_matrix(
     and selected cell lines.
     """
 
-    df = expr.merge(
-        model[
-            ["ModelID",
-             "CellLineName",
-             "StrippedCellLineName"]
-        ],
-        on="ModelID",
-        how="left"
-    )
+    df = expr
 
     df = df[
         df["StrippedCellLineName"]
@@ -53,19 +89,20 @@ def get_expression_matrix(
         .isin([c.upper() for c in cell_lines])
     ]
 
-    resolved = ["StrippedCellLineName"]
+    missing = [
+        gene
+        for gene in genes
+        if gene not in col_map
+    ]
 
-    missing = []
-
-    for gene in genes:
-
-        if gene in col_map:
-
-            resolved.append(col_map[gene])
-
-        else:
-
-            missing.append(gene)
+    resolved = [
+        "StrippedCellLineName",
+        *[
+            col_map[g]
+            for g in genes
+            if g in col_map
+        ],
+    ]
 
     df = df[resolved]
 
@@ -80,11 +117,6 @@ def get_expression_matrix(
         .str.replace(r"\s*\(.*\)", "", regex=True)
     )
 
-    df_long["Expression"] = pd.to_numeric(
-        df_long["Expression"],
-        errors="coerce"
-    )
-
     expr_matrix = df_long.pivot_table(
         index="StrippedCellLineName",
         columns="Gene",
@@ -97,20 +129,15 @@ def get_expression_matrix(
 def get_top_expression_cell_lines(
     genes,
     expr,
-    model,
     col_map,
-    n=10,
+    n=50,
 ):
     """
     Return the top expressing cell lines in DepMap
     for each gene.
     """
 
-    df = expr.merge(
-        model[["ModelID", "StrippedCellLineName"]],
-        on="ModelID",
-        how="left",
-    )
+    df = expr
 
     results = []
 
@@ -122,16 +149,15 @@ def get_top_expression_cell_lines(
         column = col_map[gene]
 
         temp = df[
-            ["StrippedCellLineName", column]
-        ].copy()
+            [
+                "StrippedCellLineName",
+                "OncotreeLineage",
+                column,
+            ]
+        ]
 
         temp = temp.rename(
             columns={column: "Expression"}
-        )
-
-        temp["Expression"] = pd.to_numeric(
-            temp["Expression"],
-            errors="coerce",
         )
 
         temp = temp.dropna()

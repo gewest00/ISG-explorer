@@ -1,5 +1,3 @@
-import pandas as pd
-
 from modules.depmap import (
     get_expression_matrix,
     get_top_expression_cell_lines,
@@ -13,7 +11,6 @@ def run_analysis(
     cell_lines,
     species,
     expr,
-    model,
     gene_column_map,
     isg,
 ):
@@ -32,7 +29,6 @@ def run_analysis(
         genes,
         cell_lines,
         expr,
-        model,
         gene_column_map,
     )
 
@@ -43,20 +39,11 @@ def run_analysis(
     top_expression = get_top_expression_cell_lines(
         genes,
         expr,
-        model,
         gene_column_map,
     )
-
-    top_expression = top_expression.merge(
-        model[
-            [
-                "StrippedCellLineName",
-                "OncotreeLineage",
-            ]
-        ].drop_duplicates(),
-        on="StrippedCellLineName",
-        how="left",
-    )
+    
+    print(top_expression.head())
+    print(top_expression.columns)
 
     # -------------------------
     # IFN annotation
@@ -77,6 +64,8 @@ def run_analysis(
         ifn_table,
         top_expression,
     )
+
+    print(len(top_expression))
 
     return {
         "genes": genes,

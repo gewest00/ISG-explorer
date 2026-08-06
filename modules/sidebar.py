@@ -30,7 +30,7 @@ def build_sidebar(
             "IFN Landscape Plot",
             "IFN Landscape Data",
             "Expression Matrix",
-            "Top 10 Cell Lines",
+            "Top 50 Cell Lines",
         ],
         default=[
             "IFN Landscape Plot",

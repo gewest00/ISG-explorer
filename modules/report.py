@@ -357,30 +357,28 @@ def generate_pdf_report(
         )
     )
 
-    # Reformat recommended table for PDF
-    recommended_pdf = recommended.T.reset_index()
+    if recommended is not None:
 
-    recommended_pdf.columns = [
-        "Gene",
-        "Top 1",
-        "Top 2",
-        "Top 3",
-        "Top 4",
-        "Top 5",
-        "Top 6",
-        "Top 7",
-        "Top 8",
-        "Top 9",
-        "Top 10",
-    ]
+        # Reformat recommended table for PDF
+        recommended_pdf = recommended.copy()
 
-    story.append(
-        dataframe_table(
-            recommended_pdf,
-            wrap_all=True,
-            header_font_size=10,
+        story.append(
+            dataframe_table(
+                recommended_pdf,
+                wrap_all=True,
+                header_font_size=10,
+                skip_first_header=True,
+            )
         )
-    )
+
+    else:
+
+        story.append(
+            Paragraph(
+                "Recommended cell line table was not generated.",
+                styles["Normal"],
+            )
+        )
 
     doc.build(story)
 
