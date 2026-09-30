@@ -11,19 +11,20 @@ def download_ifn_landscape_csv(ifnlandscape_display):
     
 def download_plot_png(fig):
 
-    png = fig.to_image(
-        format="png",
-        width=1600,
-        height=900,
-        scale=2,
-    )
-
-    st.download_button(
-        "🖼 Download PNG",
-        data=png,
-        file_name="IFN_landscape.png",
-        mime="image/png",
-    )
+    try:
+        png = fig.to_image(
+            format="png",
+            width=1600,
+            height=900,
+            scale=2,
+        )
+    
+        st.download_button(
+            "🖼 Download PNG",
+            data=png,
+            file_name="IFN_landscape.png",
+            mime="image/png",
+        )
 
     except Exception as e:
         st.warning(
