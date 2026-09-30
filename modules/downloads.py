@@ -24,6 +24,12 @@ def download_plot_png(fig):
         file_name="IFN_landscape.png",
         mime="image/png",
     )
+
+    except Exception as e:
+        st.warning(
+            "PNG export is temporarily unavailable. "
+            "The interactive plot and other results are unaffected."
+        )
     
 def download_plot_html(fig):
 
