@@ -274,31 +274,52 @@ def generate_pdf_report(
         suffix=".png",
         delete=False,
     )
-
+    tmp.close()
+    
+    plot_exported = False
+    
     try:
-        figure.write_image(
-            tmp.name,
-            width=1600,
-            height=900,
-            scale=2,
-        )
+        if figure is not None:
+            figure.write_image(
+                tmp.name,
+                width=1600,
+                height=900,
+                scale=2,
+            )
+    
+            if os.path.exists(tmp.name) and os.path.getsize(tmp.name) > 0:
+                plot_exported = True
+    
     except Exception as e:
         print(f"Could not export plot image: {e}")
-
+    
+    
     story.append(
         Paragraph(
             "<b>IFN Landscape</b>",
             styles["Heading2"],
         )
     )
-
-    story.append(
-        Image(
-            tmp.name,
-            width=18*cm,
-            height=10*cm,
+    
+    if plot_exported:
+    
+        story.append(
+            Image(
+                tmp.name,
+                width=18*cm,
+                height=10*cm,
+            )
         )
-    )
+    
+    else:
+    
+        story.append(
+            Paragraph(
+                "The IFN Landscape figure could not be embedded in this report. "
+                "The interactive plot remains available in the ISG Explorer app.",
+                styles["Normal"],
+            )
+        )
 
     story.append(Spacer(1,0.2*cm))
 
